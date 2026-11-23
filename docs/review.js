@@ -1,6 +1,6 @@
 'use strict';
 
-const endpoint = 'https://article-review-notes.k-innovationx.chatgpt.site/comments';
+const endpoint = 'https://script.google.com/macros/s/AKfycbxDfG5_NEbTBy8hxAaWQ7a9j94mprWQ02XJkupCkdDENsEQmIvjikofIpH1btfCTm-T/exec';
 const byId = id => document.getElementById(id);
 const article = document.querySelector('article');
 const panel = byId('panel');
@@ -159,12 +159,15 @@ function closePanel() {
 
 async function request(method='GET', body) {
   const response = await fetch(endpoint, {
-    method,
-    headers:{Authorization:'Bearer ' + key, ...(body ? {'Content-Type':'application/json'} : {})},
-    body:body ? JSON.stringify(body) : undefined
+    method: 'POST',
+    credentials: 'omit',
+    headers: {'Content-Type': 'text/plain;charset=UTF-8'},
+    body: JSON.stringify({key, action: method === 'GET' ? 'list' : 'save', comment: body})
   });
   if (!response.ok) throw new Error('コメントの通信に失敗しました。');
-  return response.json();
+  const result = await response.json();
+  if (result.error) throw new Error(result.error);
+  return result.data;
 }
 
 async function sync() {
@@ -180,6 +183,16 @@ async function sync() {
 
 for (const id of ['all','discuss']) byId(id).addEventListener('click', e => {show(null,e.currentTarget);void sync();});
 byId('home').addEventListener('click', e => {e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});});
+byId('share').addEventListener('click', async () => {
+  const url = new URL(location.href);
+  url.hash = new URLSearchParams({review: key}).toString();
+  try {
+    await navigator.clipboard.writeText(url.href);
+    byId('share').textContent = 'コピーしました';
+  } catch {
+    window.prompt('このURLをコピーしてください。', url.href);
+  }
+});
 byId('close').addEventListener('click', closePanel);
 document.addEventListener('keydown', e => {if(e.key === 'Escape' && !panel.hidden) closePanel();});
 article.addEventListener('click', e => {
@@ -227,8 +240,10 @@ form.addEventListener('submit', async e => {
     }
     decorate();
     refreshPanel();
-  } catch {
-    if (pending === sending) status.textContent = '保存できませんでした。入力内容を残しました。もう一度お試しください。';
+  } catch (error) {
+    if (pending === sending) status.textContent = error.message === 'too_long'
+      ? 'コメントが長すぎます。内容を分けて保存してください。'
+      : '保存できませんでした。入力内容を残しました。もう一度お試しください。';
   } finally {
     submit.disabled = false;
   }
@@ -252,6 +267,7 @@ const decode64 = text => Uint8Array.from(atob(text.replaceAll('-','+').replaceAl
     byId('access').hidden = true;
     byId('layout').hidden = false;
     byId('all').hidden = false;
+    byId('share').hidden = false;
     void sync();
   } catch {
     byId('access').textContent = '確認用の共有リンクから開いてください。';
