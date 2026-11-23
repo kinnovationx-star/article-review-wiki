@@ -15,6 +15,16 @@ function doPost(event) {
     const saved = Object.values(properties.getProperties()).map(decode_);
     return json_({data: saved.sort((a, b) => a.created.localeCompare(b.created))});
   }
+  if (request.action === 'delete' && validId_(request.id)) {
+    const lock = LockService.getScriptLock();
+    if (!lock.tryLock(10000)) return json_({error: 'busy'});
+    try {
+      properties.deleteProperty('comment_' + request.id);
+      return json_({data: true});
+    } finally {
+      lock.releaseLock();
+    }
+  }
   if (request.action !== 'save' || !validComment_(request.comment)) {
     return json_({error: 'invalid_comment'});
   }
@@ -48,12 +58,16 @@ function validKey_(key) {
 }
 
 function validComment_(note) {
-  return note && typeof note.id === 'string' && /^[a-f0-9-]{36}$/.test(note.id) &&
+  return note && validId_(note.id) &&
     typeof note.anchor === 'string' && /^(p-[1-8]|book-(?:[1-9]|10|11))$/.test(note.anchor) &&
     Number.isInteger(note.start) && Number.isInteger(note.end) &&
     note.start >= 0 && note.end > note.start && note.end <= 2000 &&
     typeof note.quote === 'string' && note.quote.length === note.end - note.start &&
     typeof note.message === 'string' && note.message.trim() && note.message.length <= 4000;
+}
+
+function validId_(id) {
+  return typeof id === 'string' && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(id);
 }
 
 function decode_(value) {

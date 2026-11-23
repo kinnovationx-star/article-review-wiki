@@ -16,3 +16,5 @@ table{border-collapse:collapse;background:#f8f9fa;width:100%;font-size:.92rem;ma
 @media(max-width:950px){.panel-open .layout{margin-right:auto}}@media(max-width:650px){header,.layout{padding-inline:1rem}.layout{margin-top:1rem;display:block}nav{position:static;padding:0 0 1rem;display:flex;gap:.75rem;flex-wrap:wrap;font-size:.875rem}nav strong{border:0}h1{font-size:1.9rem}#panel{top:auto;height:min(75vh,620px);width:100%;border-left:0;border-top:1px solid #a2a9b1}}
 .header-actions{display:flex;justify-content:flex-end;gap:.5rem;flex-wrap:wrap}
 @media(max-width:650px){header{gap:.65rem;align-items:flex-start}.brand{font-size:1.15rem}.header-actions button{font-size:.8rem;padding:.35rem .5rem}}
+
+.delete-comment{margin-inline-start:.65rem;color:#a12525}

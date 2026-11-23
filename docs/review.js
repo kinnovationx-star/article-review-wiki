@@ -10,6 +10,8 @@ const status = byId('status');
 const quote = byId('quote');
 let key;
 let notes = [];
+let notesRevision = 0;
+const deleting = new Set();
 let target;
 let lastControl;
 let pending;
@@ -125,7 +127,12 @@ function refreshPanel() {
     });
     const when = element('time', new Date(note.created).toLocaleString('ja-JP'));
     when.dateTime = note.created;
-    item.append(jump, element('p', '「' + note.quote + '」'), element('p', note.message), when);
+    const remove = element('button', '削除');
+    remove.type = 'button';
+    remove.className = 'delete-comment';
+    remove.disabled = deleting.has(note.id);
+    remove.addEventListener('click', () => void deleteComment(note, remove));
+    item.append(jump, element('p', '「' + note.quote + '」'), element('p', note.message), when, remove);
     byId('comments').append(item);
   }
   if (!relevant.length) byId('comments').append(element('p','コメントはまだありません。'));
@@ -157,12 +164,12 @@ function closePanel() {
   lastControl?.focus({preventScroll:true});
 }
 
-async function request(method='GET', body) {
+async function request(action, fields = {}) {
   const response = await fetch(endpoint, {
     method: 'POST',
     credentials: 'omit',
     headers: {'Content-Type': 'text/plain;charset=UTF-8'},
-    body: JSON.stringify({key, action: method === 'GET' ? 'list' : 'save', comment: body})
+    body: JSON.stringify({key, action, ...fields})
   });
   if (!response.ok) throw new Error('コメントの通信に失敗しました。');
   const result = await response.json();
@@ -171,13 +178,38 @@ async function request(method='GET', body) {
 }
 
 async function sync() {
+  const revision = notesRevision;
   try {
-    notes = await request();
+    const latest = await request('list');
+    if (revision !== notesRevision) return;
+    notes = latest;
     byId('sync').textContent = '';
     if (window.getSelection()?.isCollapsed !== false) decorate();
     if (!panel.hidden) refreshPanel();
   } catch {
     byId('sync').textContent = 'コメントを読み込めませんでした。ページを再読み込みしてください。';
+  }
+}
+
+async function deleteComment(note, button) {
+  if (deleting.has(note.id) || !window.confirm('このコメントを削除しますか？\n\n' + note.message)) return;
+  deleting.add(note.id);
+  button.disabled = true;
+  status.textContent = '削除しています…';
+  try {
+    await request('delete', {id: note.id});
+    notesRevision++;
+    notes = notes.filter(item => item.id !== note.id);
+    decorate();
+    refreshPanel();
+    status.textContent = 'コメントを削除しました。';
+    (target ? message : byId('close')).focus({preventScroll:true});
+  } catch {
+    status.textContent = '削除できませんでした。もう一度お試しください。';
+  } finally {
+    deleting.delete(note.id);
+    if (button.isConnected) button.disabled = false;
+    else if (notes.some(item => item.id === note.id)) refreshPanel();
   }
 }
 
@@ -231,7 +263,8 @@ form.addEventListener('submit', async e => {
   submit.disabled = true;
   status.textContent = '保存しています…';
   try {
-    const saved = await request('POST', sending);
+    const saved = await request('save', {comment: sending});
+    notesRevision++;
     if (!notes.some(n => n.id === saved.id)) notes.push(saved);
     if (pending === sending) {
       pending = undefined;
