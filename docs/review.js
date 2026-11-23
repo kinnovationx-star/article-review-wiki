@@ -64,13 +64,26 @@ function render(data) {
     h.id = id;
     article.append(h);
   };
-  data.paras.forEach((runs, i) => {
-    if (i === 1) section('career', '来歴');
-    if (i === 4) section('writing', '著作と反響');
-    const p = element('p');
-    register(p, 'p-' + (i+1), runs, i === 0 ? '概要' : i < 4 ? '来歴' : '著作と反響');
-    article.append(p);
-  });
+  for (const group of data.sections) {
+    if (group.id !== 'intro') section(group.id, group.title);
+    for (const entry of group.paragraphs) {
+      const block = element('div');
+      const p = element('p');
+      register(p, entry.id, [{text:entry.text}], group.title);
+      block.append(p);
+      const citations = element('div');
+      citations.className = 'citations';
+      for (const cite of entry.sources) {
+        const link = element('a', cite.label);
+        link.href = cite.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        citations.append(link);
+      }
+      block.append(citations);
+      article.append(block);
+    }
+  }
   section('books', '著書一覧');
   const table = element('table');
   const head = table.createTHead().insertRow();
@@ -291,7 +304,7 @@ const decode64 = text => Uint8Array.from(atob(text.replaceAll('-','+').replaceAl
   if (candidate) history.replaceState(null,'',location.pathname+location.search);
   try {
     if (!key || !/^[A-Za-z0-9_-]{43}$/.test(key)) throw new Error();
-    const res = await fetch('article.json');
+    const res = await fetch('article-v2.json');
     if (!res.ok) throw new Error();
     const file = await res.json();
     const cipherKey = await crypto.subtle.importKey('raw',decode64(key),'AES-GCM',false,['decrypt']);

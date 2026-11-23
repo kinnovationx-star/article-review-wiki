@@ -18,3 +18,4 @@ table{border-collapse:collapse;background:#f8f9fa;width:100%;font-size:.92rem;ma
 @media(max-width:650px){header{gap:.65rem;align-items:flex-start}.brand{font-size:1.15rem}.header-actions button{font-size:.8rem;padding:.35rem .5rem}}
 
 .delete-comment{margin-inline-start:.65rem;color:#a12525}
+.citations{display:flex;flex-wrap:wrap;column-gap:.8rem;row-gap:.15rem;font-size:.82rem;padding:0 .3rem;margin:-.3rem 0 .8rem}

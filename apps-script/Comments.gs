@@ -59,7 +59,7 @@ function validKey_(key) {
 
 function validComment_(note) {
   return note && validId_(note.id) &&
-    typeof note.anchor === 'string' && /^(p-[1-8]|book-(?:[1-9]|10|11))$/.test(note.anchor) &&
+    typeof note.anchor === 'string' && /^(p-(?:[1-9]|1[0-9])|book-(?:[1-9]|10|11))$/.test(note.anchor) &&
     Number.isInteger(note.start) && Number.isInteger(note.end) &&
     note.start >= 0 && note.end > note.start && note.end <= 2000 &&
     typeof note.quote === 'string' && note.quote.length === note.end - note.start &&
