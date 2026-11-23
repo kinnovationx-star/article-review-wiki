@@ -105,7 +105,13 @@ function render(data) {
     source.target = '_blank';
     source.rel = 'noopener noreferrer';
     cell.append(name, source);
-    row.insertCell().textContent = book[2].text;
+    const publisher = row.insertCell();
+    publisher.append(document.createTextNode(book[2].text));
+    if (book[1].isbn) {
+      const identifier = element('small', 'ISBN ' + book[1].isbn);
+      identifier.className = 'book-isbn';
+      publisher.append(identifier);
+    }
   });
   article.append(table);
   decorate();
@@ -304,7 +310,7 @@ const decode64 = text => Uint8Array.from(atob(text.replaceAll('-','+').replaceAl
   if (candidate) history.replaceState(null,'',location.pathname+location.search);
   try {
     if (!key || !/^[A-Za-z0-9_-]{43}$/.test(key)) throw new Error();
-    const res = await fetch('article-v2.json');
+    const res = await fetch('article-v3.json');
     if (!res.ok) throw new Error();
     const file = await res.json();
     const cipherKey = await crypto.subtle.importKey('raw',decode64(key),'AES-GCM',false,['decrypt']);

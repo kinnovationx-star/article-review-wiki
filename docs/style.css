@@ -19,3 +19,4 @@ table{border-collapse:collapse;background:#f8f9fa;width:100%;font-size:.92rem;ma
 
 .delete-comment{margin-inline-start:.65rem;color:#a12525}
 .citations{display:flex;flex-wrap:wrap;column-gap:.8rem;row-gap:.15rem;font-size:.82rem;padding:0 .3rem;margin:-.3rem 0 .8rem}
+.book-isbn{display:block;color:#54595d;font-size:.73rem;overflow-wrap:anywhere}
