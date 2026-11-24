@@ -74,6 +74,11 @@ function attachEntries(entries, title) {
     const span = element('span');
     register(span, entry.id, [{text}], title);
     item.append(span);
+    if (entry.date && !entry.dateVerified) {
+      const dateKind = element('small', ' F6 Design掲載日');
+      dateKind.className = 'entry-date-kind';
+      item.append(dateKind);
+    }
     list.append(item);
   }
   article.append(list);
@@ -360,7 +365,7 @@ const decode64 = text => Uint8Array.from(atob(text.replaceAll('-','+').replaceAl
   if (candidate) history.replaceState(null,'',location.pathname+location.search);
   try {
     if (!key || !/^[A-Za-z0-9_-]{43}$/.test(key)) throw new Error();
-    const res = await fetch('article-v5.json');
+    const res = await fetch('article-v6.json');
     if (!res.ok) throw new Error();
     const file = await res.json();
     const cipherKey = await crypto.subtle.importKey('raw',decode64(key),'AES-GCM',false,['decrypt']);

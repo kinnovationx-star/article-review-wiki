@@ -27,3 +27,4 @@ article h3{font-family:inherit;font-size:1.05rem;margin:1rem 0 .4rem;scroll-marg
 .profile-summary th{width:6em;white-space:nowrap}
 article h2#career{clear:both}
 @media(max-width:650px){.profile-summary{float:none;width:100%;margin:.7rem 0 1rem}}
+.entry-date-kind{font-size:.75rem;color:#54595d;white-space:nowrap}
