@@ -32,6 +32,7 @@ article h2#career{clear:both}
 /* Desktop reading layout based on Vector 2022 proportions. */
 :root{--surface:#fff;--soft:#f8f9fa;--rule:#a2a9b1;--divider:#eaecf0;--ink:#202122;--quiet:#54595d;--blue:#36c;--article-size:1rem;font-family:sans-serif}
 body{background:var(--surface);color:var(--ink)}
+header small,.book-isbn,.entry-date-kind,#status,#comments time{color:var(--quiet)}
 a,.tabs button,.header-actions button{color:var(--blue)}
 button{color:var(--ink);background:var(--soft);border-color:var(--rule)}
 .wiki-header{position:relative;max-width:1600px;min-height:66px;margin:auto;padding:8px 44px;display:flex;justify-content:flex-start;gap:20px;border:0}
@@ -84,10 +85,15 @@ article h2#career{clear:none}article h2#person{clear:both}
 #panel textarea{background:var(--surface);color:var(--ink)}
 #panel blockquote,table{background:var(--soft)}
 th{background:var(--divider)}
+.anchor:hover,.anchor.active{background:var(--review-highlight,#f1f5fe)}
+.anchor.has-note{background:var(--review-noted,#fff7de)}
+mark{background:var(--review-selection,#ffe3a0)}
+.delete-comment{color:var(--review-delete,#a12525)}
 [data-text=small]{--article-size:.875rem}[data-text=large]{--article-size:1.1875rem}
-[data-width=wide] .layout{max-width:none}
-[data-theme=dark]{color-scheme:dark;--surface:#101418;--soft:#202122;--rule:#72777d;--divider:#34373a;--ink:#eaecf0;--quiet:#a2a9b1;--blue:#88a3e8}
-@media(prefers-color-scheme:dark){[data-theme=auto]{color-scheme:dark;--surface:#101418;--soft:#202122;--rule:#72777d;--divider:#34373a;--ink:#eaecf0;--quiet:#a2a9b1;--blue:#88a3e8}}
+@media(min-width:1121px){[data-width=wide] .layout{max-width:none;padding-inline:32px;column-gap:24px}}
+@media(min-width:921px) and (max-width:1120px){[data-width=wide] .layout{padding-inline:20px;column-gap:16px}}
+[data-theme=dark]{color-scheme:dark;--surface:#101418;--soft:#202122;--rule:#72777d;--divider:#34373a;--ink:#eaecf0;--quiet:#a2a9b1;--blue:#88a3e8;--review-highlight:#25354d;--review-noted:#3d3020;--review-selection:#5a4123;--review-delete:#ffb3b3}
+@media(prefers-color-scheme:dark){[data-theme=auto]{color-scheme:dark;--surface:#101418;--soft:#202122;--rule:#72777d;--divider:#34373a;--ink:#eaecf0;--quiet:#a2a9b1;--blue:#88a3e8;--review-highlight:#25354d;--review-noted:#3d3020;--review-selection:#5a4123;--review-delete:#ffb3b3}}
 @media(max-width:1120px){.layout{padding-inline:32px;grid-template-columns:145px minmax(0,1fr) 145px;gap:24px}}
 @media(max-width:920px){.appearance{display:none}.layout{grid-template-columns:130px minmax(0,1fr)}.wiki-brand{min-width:0}}
 @media(max-width:650px){.wiki-header{padding:8px 16px;gap:10px;flex-wrap:wrap}.brand-mark{width:34px;height:34px;font-size:16px}.wiki-brand .brand{font-size:1rem}.wiki-brand small{font-size:.65rem}.search{width:100%;order:3}.header-actions{margin-left:auto}.header-actions button{font-size:.72rem}.layout{padding:0 16px;margin-top:10px}#toc{position:static;padding-top:0;max-height:none;display:block;padding-bottom:12px}#toc-links{display:flex;flex-wrap:wrap;gap:3px 12px}#toc-links .nested{display:none}.profile-summary{float:none;width:100%;margin:.65em 0 1em}.article-heading h1{font-size:1.65rem}}
