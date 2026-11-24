@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
-<title>人物記事の確認</title><link rel="stylesheet" href="style.css?v=8"><script src="review.js?v=7" defer></script>
+<title>山本大平 — 人物記事の確認</title><link rel="stylesheet" href="style.css?v=9"><script src="review.js?v=9" defer></script>
 </head>
 <body>
 <header class="wiki-header">
 <button id="menu" class="icon-button" type="button" aria-label="メインメニュー" aria-expanded="false"><span class="menu-icon"></span></button>
 <a href="#" id="home" class="wiki-brand"><span class="brand-mark" aria-hidden="true">項</span><span><span class="brand">ウィキ記事案</span><small>人物記事レビュー</small></span></a>
-<form id="article-search" class="search"><input id="search-input" type="search" placeholder="記事内を検索" aria-label="記事内を検索" required><button type="submit">検索</button><div id="search-results" hidden></div></form>
+<form id="article-search" class="search"><span class="search-icon" aria-hidden="true"></span><input id="search-input" type="search" placeholder="記事内を検索" aria-label="記事内を検索" required><button type="submit">検索</button><div id="search-results" hidden></div></form>
 <div class="header-actions"><button id="share" type="button" hidden>共有リンクをコピー</button><button id="all" type="button" hidden>コメント一覧</button></div>
 <div id="menu-items" class="popup" hidden><a href="#intro">ページ先頭</a><a href="#books">著書</a><a href="#appearances">出演</a></div>
 </header>
@@ -19,17 +19,21 @@
 <div class="sidebar-title"><strong>目次</strong><button id="toc-toggle" type="button" aria-expanded="true">非表示</button></div>
 <div id="toc-links"><a class="current" href="#intro">ページ先頭</a>
 <a href="#overview">概要</a><a href="#career">経歴</a><a href="#person">人物</a>
-<a href="#books">著書</a><a class="nested" href="#translations">翻訳版</a><a class="nested" href="#book-reception">刊行・反響</a>
-<a href="#appearances">出演</a><a class="nested" href="#television">テレビ</a><a class="nested" href="#radio">ラジオ</a><a class="nested" href="#streaming">ネット配信</a><a class="nested" href="#newspapers">新聞</a><a class="nested" href="#magazines">雑誌</a><a class="nested" href="#web">WEB</a>
+<div class="toc-group"><button class="toc-chevron" type="button" aria-expanded="true" aria-controls="toc-books" aria-label="著書の小見出し"></button><a href="#books">著書</a><div id="toc-books"><a class="nested" href="#translations">翻訳版</a><a class="nested" href="#book-reception">刊行・反響</a></div></div>
+<div class="toc-group"><button class="toc-chevron" type="button" aria-expanded="true" aria-controls="toc-appearances" aria-label="出演の小見出し"></button><a href="#appearances">出演</a><div id="toc-appearances"><a class="nested" href="#television">テレビ</a><a class="nested" href="#radio">ラジオ</a><a class="nested" href="#streaming">ネット配信</a><a class="nested" href="#newspapers">新聞</a><a class="nested" href="#magazines">雑誌</a><a class="nested" href="#web">WEB</a></div></div>
 <a href="#lectures">主な講演会</a><a href="#external">外部リンク</a></div>
 </nav>
 <main>
-<div class="article-heading"><h1 id="intro">山本大平</h1></div>
-<div class="tabs"><div><a href="#intro" aria-current="page">ページ</a><button id="discuss" type="button">ノート</button></div><div><a href="#intro" aria-current="page">閲覧</a><button id="review-edit" type="button">修正を提案</button></div></div>
+<div class="article-heading"><button id="compact-toc" type="button" class="compact-control" aria-label="目次" aria-expanded="false" aria-controls="toc">☷</button><h1 id="intro">山本大平</h1></div>
+<div class="tabs">
+<div><a href="#intro" aria-current="page">ページ</a><button id="discuss" type="button">ノート</button></div>
+<div><a href="#intro" aria-current="page">閲覧</a><button id="review-edit" type="button">編集</button><button id="review-history" type="button">コメント履歴</button><button id="review-bookmark" class="tab-icon" type="button" aria-label="共有リンクをコピー" title="共有リンクをコピー"><span class="bookmark-icon" aria-hidden="true"></span></button><button id="tools-toggle" class="tab-icon" type="button" aria-label="ツール" aria-expanded="false" aria-controls="page-tools">⋮</button></div>
+<div id="page-tools" class="popup" hidden><button id="print-page" type="button">印刷用バージョン</button><button id="compact-appearance" class="compact-control" type="button" aria-expanded="false" aria-controls="appearance">表示設定</button></div>
+</div>
 <p class="guide">人物記事の確認用草稿<span id="sync" role="status"></span></p>
 <article aria-label="山本大平の記事案"></article>
 </main>
-<aside class="appearance" aria-label="表示設定">
+<aside class="appearance" id="appearance" aria-label="表示設定">
 <div class="sidebar-title"><strong>表示</strong><button id="appearance-toggle" type="button" aria-expanded="true">非表示</button></div>
 <form id="appearance-options">
 <fieldset><legend>テキスト</legend><label><input type="radio" name="text" value="small"> 小</label><label><input type="radio" name="text" value="standard" checked> 標準</label><label><input type="radio" name="text" value="large"> 大</label></fieldset>

@@ -41,13 +41,13 @@ function decorate() {
     for (const run of runs) {
       const end = offset + run.text.length;
       const limits = [...new Set([offset, end, ...ranges.flatMap(n => [n.start, n.end]).filter(x => x > offset && x < end)])].sort((a,b) => a-b);
-      const parent = run.url ? element('a') : node;
+      const parent = run.url ? element('a') : run.bold ? element('strong') : node;
       if (run.url) {
         parent.href = run.url;
         parent.target = '_blank';
         parent.rel = 'noopener noreferrer';
-        node.append(parent);
       }
+      if (parent !== node) node.append(parent);
       for (let i = 1; i < limits.length; i++) {
         const from = limits[i-1], to = limits[i];
         const part = text.slice(from, to);
@@ -60,7 +60,9 @@ function decorate() {
 
 function attachParagraph(entry, title) {
   const paragraph = element('p');
-  register(paragraph, entry.id, [{text:entry.text}], title);
+  const name = !anchors.size ? entry.text.match(/^山本[ 　]?大平(?=（)/)?.[0] : undefined;
+  const runs = name ? [{text:name, bold:true}, {text:entry.text.slice(name.length)}] : [{text:entry.text}];
+  register(paragraph, entry.id, runs, title);
   article.append(paragraph);
 }
 
@@ -89,6 +91,18 @@ function render(data) {
     if (group.id !== 'intro') {
       const heading = element('h' + depth, group.title);
       heading.id = group.id;
+      const firstId = group.paragraphs?.[0]?.id ?? group.entries?.[0]?.id ??
+        (group.books ? 'book-1' : group.subsections?.[0]?.entries?.[0]?.id);
+      if (firstId) {
+        const action = element('span');
+        action.className = 'section-edit';
+        const button = element('button', '編集');
+        button.type = 'button';
+        button.setAttribute('aria-label', group.title + 'の編集コメント');
+        button.addEventListener('click', () => openEdit(firstId, button));
+        action.append('[', button, ']');
+        heading.append(action);
+      }
       article.append(heading);
     }
     for (const entry of group.paragraphs ?? []) attachParagraph(entry, group.title);
@@ -295,18 +309,29 @@ async function deleteComment(note, button) {
   }
 }
 
-for (const id of ['all','discuss']) byId(id).addEventListener('click', e => {show(null,e.currentTarget);void sync();});
+for (const id of ['all','discuss','review-history']) byId(id).addEventListener('click', e => {show(null,e.currentTarget);void sync();});
 byId('home').addEventListener('click', e => {e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});});
-byId('share').addEventListener('click', async () => {
+async function copyShareLink(event) {
   const url = new URL(location.href);
+  const button = event.currentTarget;
   url.hash = new URLSearchParams({review: key}).toString();
   try {
     await navigator.clipboard.writeText(url.href);
-    byId('share').textContent = 'コピーしました';
+    if (button.id === 'share') button.textContent = 'コピーしました';
+    else {
+      button.classList.add('copied');
+      byId('sync').textContent = '共有リンクをコピーしました。';
+      setTimeout(() => {
+        button.classList.remove('copied');
+        if (byId('sync').textContent === '共有リンクをコピーしました。') byId('sync').textContent = '';
+      }, 2000);
+    }
   } catch {
     window.prompt('このURLをコピーしてください。', url.href);
   }
-});
+}
+byId('share').addEventListener('click', copyShareLink);
+byId('review-bookmark').addEventListener('click', copyShareLink);
 byId('close').addEventListener('click', closePanel);
 document.addEventListener('keydown', e => {if(e.key === 'Escape' && !panel.hidden) closePanel();});
 article.addEventListener('click', e => {
@@ -402,6 +427,34 @@ function bindToggle(buttonId, contentId) {
 bindToggle('menu', 'menu-items');
 bindToggle('toc-toggle', 'toc-links');
 bindToggle('appearance-toggle', 'appearance-options');
+function setExpanded(button, content, open) {
+  button.setAttribute('aria-expanded', String(open));
+  content.classList.toggle('compact-open', open);
+}
+const compactToc = byId('compact-toc');
+const compactAppearance = byId('compact-appearance');
+compactToc.addEventListener('click', () => setExpanded(compactToc, byId('toc'), compactToc.getAttribute('aria-expanded') === 'false'));
+compactAppearance.addEventListener('click', () => {
+  setExpanded(compactAppearance, byId('appearance'), compactAppearance.getAttribute('aria-expanded') === 'false');
+  byId('tools-toggle').click();
+});
+const toolsButton = byId('tools-toggle');
+const toolsMenu = byId('page-tools');
+toolsButton.addEventListener('click', () => {
+  toolsMenu.hidden = !toolsMenu.hidden;
+  toolsButton.setAttribute('aria-expanded', String(!toolsMenu.hidden));
+});
+byId('print-page').addEventListener('click', () => {
+  toolsButton.click();
+  window.print();
+});
+for (const button of document.querySelectorAll('.toc-chevron')) {
+  button.addEventListener('click', () => {
+    const list = byId(button.getAttribute('aria-controls'));
+    list.hidden = !list.hidden;
+    button.setAttribute('aria-expanded', String(!list.hidden));
+  });
+}
 byId('menu-items').addEventListener('click', event => {
   if (event.target.closest('a')) byId('menu').click();
 });
@@ -410,6 +463,7 @@ byId('toc-links').addEventListener('click', event => {
   if (!link) return;
   byId('toc-links').querySelector('.current')?.classList.remove('current');
   link.classList.add('current');
+  setExpanded(compactToc, byId('toc'), false);
 });
 
 byId('appearance-options').addEventListener('change', event => {
@@ -417,13 +471,14 @@ byId('appearance-options').addEventListener('change', event => {
   if (['text', 'width', 'theme'].includes(name)) document.documentElement.dataset[name] = value;
 });
 
-byId('review-edit').addEventListener('click', event => {
-  const first = anchors.keys().next().value;
-  if (first) {
-    show(capture(first), event.currentTarget);
+function openEdit(anchor, control) {
+  if (anchors.has(anchor)) {
+    window.getSelection()?.removeAllRanges();
+    show(capture(anchor), control);
     status.textContent = '該当箇所をクリックするか、文章を選択して修正を提案できます。';
   }
-});
+}
+byId('review-edit').addEventListener('click', event => openEdit(anchors.keys().next().value, event.currentTarget));
 
 byId('article-search').addEventListener('submit', event => {
   event.preventDefault();
