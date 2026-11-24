@@ -58,33 +58,58 @@ function decorate() {
   }
 }
 
+function attachParagraph(entry, title) {
+  const paragraph = element('p');
+  register(paragraph, entry.id, [{text:entry.text}], title);
+  article.append(paragraph);
+}
+
+function attachEntries(entries, title) {
+  const list = element('ul');
+  list.className = 'article-entries';
+  for (const entry of entries) {
+    const text = entry.date ? entry.title + '（' + entry.date.split('-').map((part, i) =>
+      Number(part) + ['年', '月', '日'][i]).join('') + '）' : entry.title;
+    const item = element('li');
+    const span = element('span');
+    register(span, entry.id, [{text}], title);
+    item.append(span);
+    list.append(item);
+  }
+  article.append(list);
+}
+
 function render(data) {
-  const section = (id, title) => {
-    const h = element('h2', title);
-    h.id = id;
-    article.append(h);
-  };
-  for (const group of data.sections) {
-    if (group.id !== 'intro') section(group.id, group.title);
-    for (const entry of group.paragraphs) {
-      const block = element('div');
-      const p = element('p');
-      register(p, entry.id, [{text:entry.text}], group.title);
-      block.append(p);
-      const citations = element('div');
-      citations.className = 'citations';
-      for (const cite of entry.sources) {
-        const link = element('a', cite.label);
-        link.href = cite.url;
+  function renderSection(group, depth = 2) {
+    if (group.id !== 'intro') {
+      const heading = element('h' + depth, group.title);
+      heading.id = group.id;
+      article.append(heading);
+    }
+    for (const entry of group.paragraphs ?? []) attachParagraph(entry, group.title);
+    if (group.books) renderBooks(data.books);
+    if (group.entries?.length) attachEntries(group.entries, group.title);
+    if (group.links?.length) {
+      const list = element('ul');
+      for (const external of group.links) {
+        const item = element('li');
+        const link = element('a', external.label);
+        link.href = external.url;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        citations.append(link);
+        item.append(link);
+        list.append(item);
       }
-      block.append(citations);
-      article.append(block);
+      article.append(list);
     }
+    for (const child of group.subsections ?? []) renderSection(child, depth + 1);
   }
-  section('books', '著書一覧');
+
+  for (const group of data.sections) renderSection(group);
+  decorate();
+}
+
+function renderBooks(books) {
   const table = element('table');
   const head = table.createTHead().insertRow();
   for (const name of ['刊行年月','書名','出版社']) {
@@ -93,7 +118,7 @@ function render(data) {
     head.append(th);
   }
   const body = table.createTBody();
-  data.books.forEach((book, i) => {
+  books.forEach((book, i) => {
     const row = body.insertRow();
     row.insertCell().textContent = book[0].text;
     // The title remains clickable for editing. The catalog link is a separate action.
@@ -114,7 +139,6 @@ function render(data) {
     }
   });
   article.append(table);
-  decorate();
 }
 
 function capture(anchor) {
@@ -138,11 +162,13 @@ function refreshPanel() {
   const relevant = target ? notes.filter(n => n.anchor === target.anchor) : notes;
   for (const note of relevant) {
     const item = element('section');
-    const jump = element('button', (anchors.get(note.anchor)?.label ?? '本文') + 'の該当箇所へ');
+    const jump = element('button', anchors.has(note.anchor) ? anchors.get(note.anchor).label + 'の該当箇所へ' : '以前の原稿へのコメント');
+    jump.disabled = !anchors.has(note.anchor);
     jump.type = 'button';
     jump.addEventListener('click', () => {
+      if (!anchors.has(note.anchor)) return;
       show(note, jump);
-      anchors.get(note.anchor)?.node.scrollIntoView({block:'center',behavior:'smooth'});
+      anchors.get(note.anchor).node.scrollIntoView({block:'center',behavior:'smooth'});
     });
     const when = element('time', new Date(note.created).toLocaleString('ja-JP'));
     when.dateTime = note.created;
@@ -310,7 +336,7 @@ const decode64 = text => Uint8Array.from(atob(text.replaceAll('-','+').replaceAl
   if (candidate) history.replaceState(null,'',location.pathname+location.search);
   try {
     if (!key || !/^[A-Za-z0-9_-]{43}$/.test(key)) throw new Error();
-    const res = await fetch('article-v3.json');
+    const res = await fetch('article-v4.json');
     if (!res.ok) throw new Error();
     const file = await res.json();
     const cipherKey = await crypto.subtle.importKey('raw',decode64(key),'AES-GCM',false,['decrypt']);
