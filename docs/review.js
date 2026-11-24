@@ -105,12 +105,36 @@ function render(data) {
     for (const child of group.subsections ?? []) renderSection(child, depth + 1);
   }
 
+  if (data.profile) renderProfile(data.profile);
   for (const group of data.sections) renderSection(group);
   decorate();
 }
 
+function renderProfile(profile) {
+  const table = element('table');
+  table.className = 'profile-summary';
+  const rows = table.createTBody();
+  for (const [label, value, url] of profile) {
+    const row = rows.insertRow();
+    const labelCell = element('th', label);
+    labelCell.scope = 'row';
+    row.append(labelCell);
+    const cell = row.insertCell();
+    if (!url) cell.textContent = value;
+    else {
+      const link = element('a', value);
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      cell.append(link);
+    }
+  }
+  article.append(table);
+}
+
 function renderBooks(books) {
   const table = element('table');
+  table.className = 'books-table';
   const head = table.createTHead().insertRow();
   for (const name of ['刊行年月','書名','出版社']) {
     const th = element('th', name);
@@ -336,7 +360,7 @@ const decode64 = text => Uint8Array.from(atob(text.replaceAll('-','+').replaceAl
   if (candidate) history.replaceState(null,'',location.pathname+location.search);
   try {
     if (!key || !/^[A-Za-z0-9_-]{43}$/.test(key)) throw new Error();
-    const res = await fetch('article-v4.json');
+    const res = await fetch('article-v5.json');
     if (!res.ok) throw new Error();
     const file = await res.json();
     const cipherKey = await crypto.subtle.importKey('raw',decode64(key),'AES-GCM',false,['decrypt']);

@@ -23,3 +23,7 @@ table{border-collapse:collapse;background:#f8f9fa;width:100%;font-size:.92rem;ma
 article h3{font-family:inherit;font-size:1.05rem;margin:1rem 0 .4rem;scroll-margin-top:1rem}
 .article-entries{margin:.25rem 0 .9rem;padding-inline-start:1.6rem}
 .article-entries li{margin:.12rem 0;line-height:1.75}
+.profile-summary{float:right;width:min(44%,20rem);margin:.6rem 0 1rem 1.25rem}
+.profile-summary th{width:6em;white-space:nowrap}
+article h2#career{clear:both}
+@media(max-width:650px){.profile-summary{float:none;width:100%;margin:.7rem 0 1rem}}
