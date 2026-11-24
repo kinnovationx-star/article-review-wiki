@@ -3,22 +3,40 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
-<title>人物記事の確認</title><link rel="stylesheet" href="style.css?v=6"><script src="review.js?v=6" defer></script>
+<title>人物記事の確認</title><link rel="stylesheet" href="style.css?v=7"><script src="review.js?v=7" defer></script>
 </head>
 <body>
-<header><a href="#" id="home"><span class="brand">人物記事レビュー</span><small>ご本人確認用</small></a><div class="header-actions"><button id="share" type="button" hidden>共有リンクをコピー</button><button id="all" type="button" hidden>コメント一覧</button></div></header>
+<header class="wiki-header">
+<button id="menu" class="icon-button" type="button" aria-label="メインメニュー" aria-expanded="false"><span class="menu-icon"></span></button>
+<a href="#" id="home" class="wiki-brand"><span class="brand-mark" aria-hidden="true">項</span><span><span class="brand">ウィキ記事案</span><small>人物記事レビュー</small></span></a>
+<form id="article-search" class="search"><input id="search-input" type="search" placeholder="記事内を検索" aria-label="記事内を検索" required><button type="submit">検索</button><div id="search-results" hidden></div></form>
+<div class="header-actions"><button id="share" type="button" hidden>共有リンクをコピー</button><button id="all" type="button" hidden>コメント一覧</button></div>
+<div id="menu-items" class="popup" hidden><a href="#intro">ページ先頭</a><a href="#books">著書</a><a href="#appearances">出演</a></div>
+</header>
 <div id="access" role="status">記事を読み込んでいます。</div>
 <div class="layout" id="layout" hidden>
-<nav aria-label="目次">
-<strong>目次</strong>
-<a href="#overview">概要</a><a href="#career">経歴</a><a href="#person">人物</a><a href="#books">著書</a><a href="#appearances">出演</a><a href="#lectures">主な講演会</a><a href="#external">外部リンク</a>
+<nav id="toc" aria-label="目次">
+<div class="sidebar-title"><strong>目次</strong><button id="toc-toggle" type="button" aria-expanded="true">非表示</button></div>
+<div id="toc-links"><a class="current" href="#intro">ページ先頭</a>
+<a href="#overview">概要</a><a href="#career">経歴</a><a href="#person">人物</a>
+<a href="#books">著書</a><a class="nested" href="#translations">翻訳版</a><a class="nested" href="#book-reception">刊行・反響</a>
+<a href="#appearances">出演</a><a class="nested" href="#television">テレビ</a><a class="nested" href="#radio">ラジオ</a><a class="nested" href="#streaming">ネット配信</a><a class="nested" href="#newspapers">新聞</a><a class="nested" href="#magazines">雑誌</a><a class="nested" href="#web">WEB</a>
+<a href="#lectures">主な講演会</a><a href="#external">外部リンク</a></div>
 </nav>
 <main>
-<h1 id="intro">山本大平</h1>
-<div class="tabs"><span aria-current="page">記事</span><button id="discuss" type="button">コメント</button></div>
-<p class="guide">修正したい段落や項目をクリックすると、コメント欄が開きます。文章を選択すると、その範囲を指定できます。<span id="sync" role="status"></span></p>
+<div class="article-heading"><h1 id="intro">山本大平</h1></div>
+<div class="tabs"><div><a href="#intro" aria-current="page">ページ</a><button id="discuss" type="button">ノート</button></div><div><a href="#intro" aria-current="page">閲覧</a><button id="review-edit" type="button">修正を提案</button></div></div>
+<p class="guide">人物記事の確認用草稿<span id="sync" role="status"></span></p>
 <article aria-label="山本大平の記事案"></article>
 </main>
+<aside class="appearance" aria-label="表示設定">
+<div class="sidebar-title"><strong>表示</strong><button id="appearance-toggle" type="button" aria-expanded="true">非表示</button></div>
+<form id="appearance-options">
+<fieldset><legend>テキスト</legend><label><input type="radio" name="text" value="small"> 小</label><label><input type="radio" name="text" value="standard" checked> 標準</label><label><input type="radio" name="text" value="large"> 大</label></fieldset>
+<fieldset><legend>幅</legend><label><input type="radio" name="width" value="standard" checked> 標準</label><label><input type="radio" name="width" value="wide"> 広め</label></fieldset>
+<fieldset><legend>色</legend><label><input type="radio" name="theme" value="auto"> 自動</label><label><input type="radio" name="theme" value="light" checked> ライト</label><label><input type="radio" name="theme" value="dark"> ダーク</label></fieldset>
+</form>
+</aside>
 </div>
 <aside id="panel" hidden aria-labelledby="panel-title">
 <div class="panel-head"><h2 id="panel-title">コメント</h2><button id="close" type="button" aria-label="閉じる">×</button></div>

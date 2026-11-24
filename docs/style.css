@@ -28,3 +28,66 @@ article h3{font-family:inherit;font-size:1.05rem;margin:1rem 0 .4rem;scroll-marg
 article h2#career{clear:both}
 @media(max-width:650px){.profile-summary{float:none;width:100%;margin:.7rem 0 1rem}}
 .entry-date-kind{font-size:.75rem;color:#54595d;white-space:nowrap}
+
+/* Desktop reading layout based on Vector 2022 proportions. */
+:root{--surface:#fff;--soft:#f8f9fa;--rule:#a2a9b1;--divider:#eaecf0;--ink:#202122;--quiet:#54595d;--blue:#36c;--article-size:1rem;font-family:sans-serif}
+body{background:var(--surface);color:var(--ink)}
+a,.tabs button,.header-actions button{color:var(--blue)}
+button{color:var(--ink);background:var(--soft);border-color:var(--rule)}
+.wiki-header{position:relative;max-width:1600px;min-height:66px;margin:auto;padding:8px 44px;display:flex;justify-content:flex-start;gap:20px;border:0}
+.wiki-header .icon-button{width:20px;height:32px;border:0;background:none;padding:0;display:grid;place-items:center;flex:none}
+.menu-icon{width:18px;height:14px;display:block;border-block:2px solid currentColor;position:relative}
+.menu-icon::after{content:"";position:absolute;top:4px;left:0;width:100%;border-top:2px solid currentColor}
+.wiki-brand{display:flex;gap:10px;align-items:center;min-width:200px;flex:none;color:var(--ink)}
+.brand-mark{width:48px;height:48px;border:1px solid var(--rule);border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 34% 25%,var(--surface),var(--divider));font-family:serif;font-size:23px}
+.wiki-brand .brand{font-size:1.28rem;white-space:nowrap}
+.wiki-brand small{font: .78rem serif;letter-spacing:.12em;margin:0;text-align:center}
+.search{position:relative;display:flex;width:min(474px,35vw);height:32px;margin-left:0}
+.search input{min-width:0;flex:1;border:1px solid #72777d;padding:0 9px;background:var(--surface);color:var(--ink);font:inherit;font-size:.875rem;border-radius:2px 0 0 2px}
+.search button{border:1px solid #72777d;border-left:0;font-weight:bold;border-radius:0 2px 2px 0;font-size:.875rem;padding:3px 10px}
+.header-actions{margin-left:auto;flex-wrap:nowrap}
+.header-actions button,.tabs button{background:none;border:0;padding:4px;font-size:.875rem}
+.popup,#search-results{position:absolute;z-index:2;background:var(--surface);border:1px solid var(--rule);padding:8px;box-shadow:0 3px 10px #0002}
+.popup{top:55px;left:44px}#search-results{top:32px;inset-inline:0}
+.popup a,#search-results a{display:block;padding:7px;font-size:.875rem}
+.layout{max-width:1600px;margin:23px auto 0;padding:0 60px;grid-template-columns:164px minmax(0,1fr) 164px;gap:40px}
+.layout main{min-width:0}
+#toc,.appearance{position:sticky;top:16px;align-self:start;padding-top:47px;font-size:.875rem;max-height:95vh;overflow:auto}
+.sidebar-title{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--divider);padding-bottom:6px;margin-bottom:6px}
+.sidebar-title button{border:0;background:var(--divider);border-radius:2px;font-size:.75rem;padding:5px 8px}
+#toc strong{border:0;padding:0}
+#toc a{padding:6px 0}
+#toc .nested{padding-left:12px}
+#toc .current{font-weight:bold;color:var(--ink)}
+.appearance fieldset{border:0;padding:0;margin:0 0 16px;min-width:0}
+.appearance legend{width:100%;padding:6px 0;border-bottom:1px solid var(--divider);margin:0 0 7px;color:var(--quiet)}
+.appearance label{font-weight:normal;display:flex;align-items:center;gap:5px;margin:0;padding:6px 0}
+.appearance input{accent-color:#36c;width:17px;height:17px;margin:0}
+.article-heading{border-bottom:1px solid var(--rule)}
+.article-heading h1{font:normal 1.8rem/1.35 'Linux Libertine',Georgia,'Yu Mincho',serif;color:var(--ink);margin:0}
+.tabs{justify-content:space-between;gap:.25rem;color:var(--ink);font-size:.875rem}
+.tabs div{display:flex;align-items:stretch;gap:16px}
+.tabs a,.tabs button{padding:5px 0;border-radius:0}
+.tabs [aria-current]{color:var(--ink);border-bottom:2px solid var(--ink)}
+.guide{background:none;border:0;color:var(--ink);padding:0;margin:8px 0 14px;font-size:.875rem}
+article{font-size:var(--article-size);line-height:1.625;display:flow-root}
+article p{margin:.5em 0 1em;padding:0}
+article .anchor{line-height:inherit}
+article h2{font:normal 1.5em/1.375 'Linux Libertine',Georgia,'Yu Mincho',serif;color:var(--ink);margin:1em 0 .25em;padding:0 0 2px;border-color:var(--rule)}
+article h2#career{clear:none}article h2#person{clear:both}
+.profile-summary{width:min(37%,310px);margin:.42em 0 .5em 1em;border:1px solid var(--rule);background:var(--soft);font-size:.875em;line-height:1.55}
+.profile-summary th,.profile-summary td{background:transparent;border:0;padding:2px 6px;white-space:normal}
+.profile-summary th[scope]{width:5.4em}
+.profile-summary .profile-name{text-align:center;padding:6px}
+.profile-name span,.profile-name strong{display:block}.profile-name span{font-weight:normal}.profile-name strong{font-size:1.2em}
+#panel{background:var(--surface);border-color:var(--rule)}
+#panel textarea{background:var(--surface);color:var(--ink)}
+#panel blockquote,table{background:var(--soft)}
+th{background:var(--divider)}
+[data-text=small]{--article-size:.875rem}[data-text=large]{--article-size:1.1875rem}
+[data-width=wide] .layout{max-width:none}
+[data-theme=dark]{color-scheme:dark;--surface:#101418;--soft:#202122;--rule:#72777d;--divider:#34373a;--ink:#eaecf0;--quiet:#a2a9b1;--blue:#88a3e8}
+@media(prefers-color-scheme:dark){[data-theme=auto]{color-scheme:dark;--surface:#101418;--soft:#202122;--rule:#72777d;--divider:#34373a;--ink:#eaecf0;--quiet:#a2a9b1;--blue:#88a3e8}}
+@media(max-width:1120px){.layout{padding-inline:32px;grid-template-columns:145px minmax(0,1fr) 145px;gap:24px}}
+@media(max-width:920px){.appearance{display:none}.layout{grid-template-columns:130px minmax(0,1fr)}.wiki-brand{min-width:0}}
+@media(max-width:650px){.wiki-header{padding:8px 16px;gap:10px;flex-wrap:wrap}.brand-mark{width:34px;height:34px;font-size:16px}.wiki-brand .brand{font-size:1rem}.wiki-brand small{font-size:.65rem}.search{width:100%;order:3}.header-actions{margin-left:auto}.header-actions button{font-size:.72rem}.layout{padding:0 16px;margin-top:10px}#toc{position:static;padding-top:0;max-height:none;display:block;padding-bottom:12px}#toc-links{display:flex;flex-wrap:wrap;gap:3px 12px}#toc-links .nested{display:none}.profile-summary{float:none;width:100%;margin:.65em 0 1em}.article-heading h1{font-size:1.65rem}}

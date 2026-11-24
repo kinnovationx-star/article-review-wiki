@@ -119,7 +119,15 @@ function renderProfile(profile) {
   const table = element('table');
   table.className = 'profile-summary';
   const rows = table.createTBody();
-  for (const [label, value, url] of profile) {
+  const [, name] = profile[0];
+  const [fullName, reading] = name.split('（');
+  const heading = element('th');
+  heading.colSpan = 2;
+  heading.className = 'profile-name';
+  if (reading) heading.append(element('span', reading.replace('）', '')));
+  heading.append(element('strong', fullName));
+  rows.insertRow().append(heading);
+  for (const [label, value, url] of profile.slice(1)) {
     const row = rows.insertRow();
     const labelCell = element('th', label);
     labelCell.scope = 'row';
@@ -380,3 +388,56 @@ const decode64 = text => Uint8Array.from(atob(text.replaceAll('-','+').replaceAl
     byId('access').textContent = '確認用の共有リンクから開いてください。';
   }
 })();
+
+function bindToggle(buttonId, contentId) {
+  const button = byId(buttonId);
+  const content = byId(contentId);
+  button.addEventListener('click', () => {
+    content.hidden = !content.hidden;
+    button.setAttribute('aria-expanded', String(!content.hidden));
+    if (buttonId !== 'menu') button.textContent = content.hidden ? '表示' : '非表示';
+  });
+}
+
+bindToggle('menu', 'menu-items');
+bindToggle('toc-toggle', 'toc-links');
+bindToggle('appearance-toggle', 'appearance-options');
+byId('menu-items').addEventListener('click', event => {
+  if (event.target.closest('a')) byId('menu').click();
+});
+byId('toc-links').addEventListener('click', event => {
+  const link = event.target.closest('a');
+  if (!link) return;
+  byId('toc-links').querySelector('.current')?.classList.remove('current');
+  link.classList.add('current');
+});
+
+byId('appearance-options').addEventListener('change', event => {
+  const {name, value} = event.target;
+  if (['text', 'width', 'theme'].includes(name)) document.documentElement.dataset[name] = value;
+});
+
+byId('review-edit').addEventListener('click', event => {
+  const first = anchors.keys().next().value;
+  if (first) {
+    show(capture(first), event.currentTarget);
+    status.textContent = '該当箇所をクリックするか、文章を選択して修正を提案できます。';
+  }
+});
+
+byId('article-search').addEventListener('submit', event => {
+  event.preventDefault();
+  const results = byId('search-results');
+  const query = byId('search-input').value.trim().toLocaleLowerCase('ja');
+  results.replaceChildren();
+  if (!query) return;
+  const hits = [...anchors].filter(([,entry]) => entry.text.toLocaleLowerCase('ja').includes(query)).slice(0, 12);
+  for (const [id, entry] of hits) {
+    const link = element('a', entry.label + ' — ' + entry.text.slice(0, 58));
+    link.href = '#' + id;
+    link.addEventListener('click', () => { results.hidden = true; });
+    results.append(link);
+  }
+  if (!hits.length) results.append(element('p', '一致する項目はありません。'));
+  results.hidden = false;
+});
