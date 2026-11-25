@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
-<title>山本大平 — 人物記事の確認</title><link rel="stylesheet" href="style.css?v=10"><script src="review.js?v=11" defer></script>
+<title>山本大平 — 人物記事の確認</title><link rel="stylesheet" href="style.css?v=11"><script src="review.js?v=12" defer></script>
 </head>
 <body>
 <header class="wiki-header">
@@ -54,7 +54,8 @@
 <header><h2 id="edit-title">本文を編集</h2><button id="edit-close" type="button" aria-label="閉じる">×</button></header>
 <p>保存すると、この共有リンクで記事を開く人にも反映されます。</p>
 <label for="edit-anchor">編集する箇所</label><select id="edit-anchor"></select>
-<label for="edit-text">本文</label><textarea id="edit-text" rows="9" maxlength="2000" required></textarea>
+<label id="edit-text-label" for="edit-text">本文</label><textarea id="edit-text" rows="9" maxlength="2000" required></textarea>
+<div id="edit-url-field" hidden><label for="edit-url">リンク先URL</label><input type="url" id="edit-url" maxlength="2048" disabled></div>
 <p id="edit-status" role="status"></p>
 <div id="edit-conflict" hidden><p>現在公開されている文章</p><blockquote id="edit-current"></blockquote><button id="edit-rebase" type="button">最新版を確認して編集を続ける</button></div>
 <div class="edit-actions"><button id="edit-cancel" type="button">キャンセル</button><button id="edit-save" class="primary" type="submit">本文を保存</button></div>

@@ -36,8 +36,9 @@ function applySharedEdit(edit) {
   const entry = anchors.get(edit.anchor);
   if (!entry) return;
   const name = entry.originalRuns[0]?.bold ? edit.text.match(/^山本[ 　]?大平(?=（)/)?.[0] : undefined;
+  const url = edit.anchor === 'profile-website' ? edit.url : undefined;
   entry.text = edit.text;
-  entry.runs = name ? [{text:name,bold:true}, {text:edit.text.slice(name.length)}] : [{text:edit.text}];
+  entry.runs = name ? [{text:name,bold:true}, {text:edit.text.slice(name.length)}] : [{text:edit.text,url}];
   entry.revision = edit.id;
   entry.node.style.whiteSpace = 'pre-wrap';
 }
@@ -78,7 +79,7 @@ function decorate() {
 function attachParagraph(entry, title) {
   const paragraph = element('p');
   if (entry.preserveWhitespace) paragraph.style.whiteSpace = 'pre-wrap';
-  const name = !anchors.size ? entry.text.match(/^山本[ 　]?大平(?=（)/)?.[0] : undefined;
+  const name = !article.querySelector('p.anchor') ? entry.text.match(/^山本[ 　]?大平(?=（)/)?.[0] : undefined;
   const runs = name ? [{text:name, bold:true}, {text:entry.text.slice(name.length)}] : [{text:entry.text}];
   register(paragraph, entry.id, runs, title);
   article.append(paragraph);
@@ -148,6 +149,7 @@ function render(data) {
 }
 
 function renderProfile(profile) {
+  const fields = ['birth', 'education', 'occupation', 'position', 'website'];
   const table = element('table');
   table.className = 'profile-summary';
   const rows = table.createTBody();
@@ -156,24 +158,28 @@ function renderProfile(profile) {
   const heading = element('th');
   heading.colSpan = 2;
   heading.className = 'profile-name';
-  if (reading) heading.append(element('span', reading.replace('）', '')));
-  heading.append(element('strong', fullName));
+  const readingNode = element('span');
+  const nameNode = element('strong');
+  register(readingNode, 'profile-reading', [{text:reading?.replace('）','') ?? ''}], 'プロフィール・ふりがな');
+  register(nameNode, 'profile-name', [{text:fullName}], 'プロフィール・氏名');
+  heading.append(readingNode, nameNode);
   rows.insertRow().append(heading);
-  for (const [label, value, url] of profile.slice(1)) {
+  for (const [index, [label, value, url]] of profile.slice(1).entries()) {
     const row = rows.insertRow();
     const labelCell = element('th', label);
     labelCell.scope = 'row';
     row.append(labelCell);
     const cell = row.insertCell();
-    if (!url) cell.textContent = value;
-    else {
-      const link = element('a', value);
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      cell.append(link);
-    }
+    register(cell, 'profile-' + fields[index], [{text:value,url}], 'プロフィール・' + label);
   }
+  const actions = rows.insertRow().insertCell();
+  actions.colSpan = 2;
+  actions.className = 'profile-actions';
+  const edit = element('button', '編集');
+  edit.type = 'button';
+  edit.setAttribute('aria-label', 'プロフィールを編集');
+  edit.addEventListener('click', () => openEdit('profile-name', edit));
+  actions.append('[', edit, ']');
   article.append(table);
 }
 
@@ -500,6 +506,7 @@ byId('appearance-options').addEventListener('change', event => {
 const editDialog = byId('edit-dialog');
 const editSelect = byId('edit-anchor');
 const editText = byId('edit-text');
+const editUrl = byId('edit-url');
 const editStatus = byId('edit-status');
 const editSave = byId('edit-save');
 const editConflict = byId('edit-conflict');
@@ -508,9 +515,18 @@ let attemptedEdit;
 
 function selectEdit(anchor) {
   const entry = anchors.get(anchor);
-  editing = {anchor, base:entry.revision, text:entry.text};
+  const profile = anchor.startsWith('profile-');
+  const website = anchor === 'profile-website';
+  editing = {anchor, base:entry.revision, text:entry.text, url:website ? entry.runs[0].url ?? '' : ''};
   editSelect.value = anchor;
   editText.value = entry.text;
+  editText.rows = profile ? 3 : 9;
+  byId('edit-title').textContent = profile ? 'プロフィールを編集' : '本文を編集';
+  byId('edit-text-label').textContent = website ? '公式サイトの表示名' : profile ? entry.label.slice('プロフィール・'.length) : '本文';
+  byId('edit-url-field').hidden = !website;
+  editUrl.value = editing.url;
+  editUrl.required = website;
+  editUrl.disabled = !website;
   editStatus.textContent = '';
   editConflict.hidden = true;
   attemptedEdit = null;
@@ -543,11 +559,11 @@ async function openEdit(anchor, control) {
     control.disabled = false;
   }
 }
-byId('review-edit').addEventListener('click', event => openEdit(anchors.keys().next().value, event.currentTarget));
+byId('review-edit').addEventListener('click', event => openEdit(article.querySelector('p.anchor')?.id, event.currentTarget));
 byId('edit-target').addEventListener('click', event => openEdit(target?.anchor, event.currentTarget));
 
 editSelect.addEventListener('change', () => {
-  if (editText.value !== editing.text && !window.confirm('この箇所の未保存の変更を破棄しますか？')) {
+  if ((editText.value !== editing.text || editUrl.value !== editing.url) && !window.confirm('この箇所の未保存の変更を破棄しますか？')) {
     editSelect.value = editing.anchor;
     return;
   }
@@ -562,6 +578,7 @@ byId('edit-rebase').addEventListener('click', () => {
   const entry = anchors.get(editing.anchor);
   editing.base = entry.revision;
   editing.text = entry.text;
+  editing.url = editing.anchor === 'profile-website' ? entry.runs[0].url ?? '' : '';
   editConflict.hidden = true;
   editStatus.textContent = '編集内容は残しています。確認してから保存してください。';
   editText.focus();
@@ -571,7 +588,9 @@ byId('edit-form').addEventListener('submit', async event => {
   event.preventDefault();
   if (editSave.disabled || !editConflict.hidden) return;
   const value = editText.value;
-  if (value === editing.text) {
+  const website = editing.anchor === 'profile-website';
+  const url = editUrl.value.trim();
+  if (value === editing.text && url === editing.url) {
     editDialog.close();
     return;
   }
@@ -579,10 +598,16 @@ byId('edit-form').addEventListener('submit', async event => {
     editStatus.textContent = '本文を入力してください。';
     return;
   }
-  if (attemptedEdit?.text !== value || attemptedEdit.base !== editing.base) {
+  if (website && !/^https?:\/\/[^\s\\]+$/i.test(url)) {
+    editStatus.textContent = 'http:// または https:// で始まるURLを入力してください。';
+    return;
+  }
+  if (attemptedEdit?.text !== value || attemptedEdit.base !== editing.base || (attemptedEdit.url ?? '') !== url) {
     attemptedEdit = {anchor:editing.anchor,base:editing.base,id:crypto.randomUUID(),text:value};
+    if (website) attemptedEdit.url = url;
   }
   const controls = [editSave,editText,editSelect,byId('edit-close'),byId('edit-cancel')];
+  if (website) controls.push(editUrl);
   controls.forEach(control => { control.disabled = true; });
   editStatus.textContent = '保存しています…';
   try {
@@ -590,7 +615,8 @@ byId('edit-form').addEventListener('submit', async event => {
     if ('conflict' in result) {
       if (result.conflict) applySharedEdit(result.conflict);
       decorate();
-      byId('edit-current').textContent = anchors.get(editing.anchor).text;
+      const latest = anchors.get(editing.anchor);
+      byId('edit-current').textContent = website ? latest.text + '\n' + (latest.runs[0].url ?? '') : latest.text;
       editConflict.hidden = false;
       editStatus.textContent = '別の編集が保存されました。最新版を確認してください。';
       return;
@@ -599,7 +625,7 @@ byId('edit-form').addEventListener('submit', async event => {
     decorate();
     if (!panel.hidden) refreshPanel();
     editDialog.close();
-    byId(panel.hidden ? 'article-status' : 'status').textContent = '本文を保存しました。';
+    byId(panel.hidden ? 'article-status' : 'status').textContent = editing.anchor.startsWith('profile-') ? 'プロフィールを保存しました。' : '本文を保存しました。';
   } catch (error) {
     editStatus.textContent = error.message === 'too_long'
       ? '文章が長すぎます。短くしてから保存してください。'

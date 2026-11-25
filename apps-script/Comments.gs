@@ -64,19 +64,24 @@ function editArticle_(properties, edit) {
       typeof edit.text !== 'string' || !edit.text.trim() || edit.text.length > 2000) {
     return json_({error: 'invalid_edit'});
   }
+  const website = edit.anchor === 'profile-website';
+  if (website ? !validWebsite_(edit.url) : edit.url !== undefined) {
+    return json_({error: 'invalid_edit'});
+  }
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) return json_({error: 'busy'});
   try {
     const name = 'article_v7_' + edit.anchor;
     const previous = properties.getProperty(name);
     const current = previous ? decode_(previous) : null;
-    if (current && current.id === edit.id && current.text === edit.text) {
+    if (current && current.id === edit.id && current.text === edit.text && current.url === edit.url) {
       return json_({data: {saved: current}});
     }
     if ((current ? current.id : null) !== edit.base) {
       return json_({data: {conflict: current}});
     }
     const saved = {anchor: edit.anchor, id: edit.id, text: edit.text};
+    if (website) saved.url = edit.url;
     const encoded = JSON.stringify(saved);
     if (Utilities.newBlob(encoded).getBytes().length > 8500) return json_({error: 'too_long'});
     properties.setProperty(name, encoded);
@@ -106,7 +111,12 @@ function validComment_(note) {
 
 function validAnchor_(id) {
   return typeof id === 'string' &&
-    /^(p-(?:[1-9]|[12][0-9]|3[0-5])|career-v7-[1-5]|book-(?:[1-9]|10|11)|event-[1-9][0-9]{3})$/.test(id);
+    /^(p-(?:[1-9]|[12][0-9]|3[0-5])|career-v7-[1-5]|book-(?:[1-9]|10|11)|event-[1-9][0-9]{3}|profile-(?:reading|name|birth|education|occupation|position|website))$/.test(id);
+}
+
+function validWebsite_(value) {
+  return typeof value === 'string' && value.length <= 2048 &&
+    /^https?:\/\/[^\s\\]+$/i.test(value);
 }
 
 function validId_(id) {
