@@ -60,6 +60,7 @@ function decorate() {
 
 function attachParagraph(entry, title) {
   const paragraph = element('p');
+  if (entry.preserveWhitespace) paragraph.style.whiteSpace = 'pre-wrap';
   const name = !anchors.size ? entry.text.match(/^山本[ 　]?大平(?=（)/)?.[0] : undefined;
   const runs = name ? [{text:name, bold:true}, {text:entry.text.slice(name.length)}] : [{text:entry.text}];
   register(paragraph, entry.id, runs, title);
@@ -398,7 +399,7 @@ const decode64 = text => Uint8Array.from(atob(text.replaceAll('-','+').replaceAl
   if (candidate) history.replaceState(null,'',location.pathname+location.search);
   try {
     if (!key || !/^[A-Za-z0-9_-]{43}$/.test(key)) throw new Error();
-    const res = await fetch('article-v6.json');
+    const res = await fetch('article-v7.json');
     if (!res.ok) throw new Error();
     const file = await res.json();
     const cipherKey = await crypto.subtle.importKey('raw',decode64(key),'AES-GCM',false,['decrypt']);
