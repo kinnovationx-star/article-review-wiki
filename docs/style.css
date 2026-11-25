@@ -180,3 +180,15 @@ article h3 .section-edit{font-size:.76em}
   .wiki-header,#toc,.appearance,.tabs,.section-edit,#panel,.compact-control{display:none!important}
   .layout,.panel-open .layout{display:block;margin:0;padding:0}
 }
+
+#edit-dialog{width:min(42rem,calc(100% - 2rem));max-height:calc(100% - 2rem);padding:1.2rem;border:1px solid var(--rule);border-radius:4px;color:var(--ink);background:var(--surface);box-shadow:0 8px 36px #0003}
+#edit-dialog::backdrop{background:#0006}
+#edit-dialog header{padding:0;gap:1rem;border:0}
+#edit-title{margin:0;font:normal 1.4rem/1.4 sans-serif}
+#edit-form>p,#edit-conflict>p{font-size:.875rem}
+#edit-anchor,#edit-text{width:100%;padding:.55rem;border:1px solid var(--rule);border-radius:2px;color:var(--ink);background:var(--surface);font:inherit}
+#edit-text{line-height:1.55}
+#edit-status:empty{display:none}
+#edit-current{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--soft)}
+.edit-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem}
+#edit-dialog button:disabled{opacity:.6;cursor:wait}

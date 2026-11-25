@@ -11,8 +11,12 @@ function doPost(event) {
   if (!request || !validKey_(request.key)) return json_({error: 'unauthorized'});
 
   const properties = PropertiesService.getScriptProperties();
+  if (request.action === 'article_edits') {
+    return json_({data: propertiesWithPrefix_(properties, 'article_v7_')});
+  }
+  if (request.action === 'article_edit') return editArticle_(properties, request.edit);
   if (request.action === 'list') {
-    const saved = Object.values(properties.getProperties()).map(decode_);
+    const saved = propertiesWithPrefix_(properties, 'comment_');
     return json_({data: saved.sort((a, b) => a.created.localeCompare(b.created))});
   }
   if (request.action === 'delete' && validId_(request.id)) {
@@ -48,6 +52,40 @@ function doPost(event) {
   }
 }
 
+function propertiesWithPrefix_(properties, prefix) {
+  return Object.entries(properties.getProperties())
+    .filter(([name]) => name.startsWith(prefix))
+    .map(([, value]) => decode_(value));
+}
+
+function editArticle_(properties, edit) {
+  if (!edit || !validAnchor_(edit.anchor) || !validId_(edit.id) ||
+      (edit.base !== null && !validId_(edit.base)) ||
+      typeof edit.text !== 'string' || !edit.text.trim() || edit.text.length > 2000) {
+    return json_({error: 'invalid_edit'});
+  }
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) return json_({error: 'busy'});
+  try {
+    const name = 'article_v7_' + edit.anchor;
+    const previous = properties.getProperty(name);
+    const current = previous ? decode_(previous) : null;
+    if (current && current.id === edit.id && current.text === edit.text) {
+      return json_({data: {saved: current}});
+    }
+    if ((current ? current.id : null) !== edit.base) {
+      return json_({data: {conflict: current}});
+    }
+    const saved = {anchor: edit.anchor, id: edit.id, text: edit.text};
+    const encoded = JSON.stringify(saved);
+    if (Utilities.newBlob(encoded).getBytes().length > 8500) return json_({error: 'too_long'});
+    properties.setProperty(name, encoded);
+    return json_({data: {saved}});
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function validKey_(key) {
   if (typeof key !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(key)) return false;
   const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, key, Utilities.Charset.UTF_8)
@@ -59,11 +97,16 @@ function validKey_(key) {
 
 function validComment_(note) {
   return note && validId_(note.id) &&
-    typeof note.anchor === 'string' && /^(p-(?:[1-9]|[12][0-9]|3[0-5])|book-(?:[1-9]|10|11)|event-[1-9][0-9]{3})$/.test(note.anchor) &&
+    validAnchor_(note.anchor) &&
     Number.isInteger(note.start) && Number.isInteger(note.end) &&
     note.start >= 0 && note.end > note.start && note.end <= 2000 &&
     typeof note.quote === 'string' && note.quote.length === note.end - note.start &&
     typeof note.message === 'string' && note.message.trim() && note.message.length <= 4000;
+}
+
+function validAnchor_(id) {
+  return typeof id === 'string' &&
+    /^(p-(?:[1-9]|[12][0-9]|3[0-5])|career-v7-[1-5]|book-(?:[1-9]|10|11)|event-[1-9][0-9]{3})$/.test(id);
 }
 
 function validId_(id) {

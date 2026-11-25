@@ -16,6 +16,7 @@ let target;
 let lastControl;
 let pending;
 const anchors = new Map();
+let sharedEditsReady;
 
 function element(tag, text) {
   const node = document.createElement(tag);
@@ -28,7 +29,23 @@ function register(node, id, runs, label) {
   node.id = id;
   node.tabIndex = 0;
   node.setAttribute('aria-description', 'クリックまたは Enter キーでコメントを入力');
-  anchors.set(id, { node, runs, label, text: runs.map(run => run.text).join('') });
+  anchors.set(id, { node, runs, originalRuns:runs, label, text: runs.map(run => run.text).join(''), revision:null });
+}
+
+function applySharedEdit(edit) {
+  const entry = anchors.get(edit.anchor);
+  if (!entry) return;
+  const name = entry.originalRuns[0]?.bold ? edit.text.match(/^山本[ 　]?大平(?=（)/)?.[0] : undefined;
+  entry.text = edit.text;
+  entry.runs = name ? [{text:name,bold:true}, {text:edit.text.slice(name.length)}] : [{text:edit.text}];
+  entry.revision = edit.id;
+  entry.node.style.whiteSpace = 'pre-wrap';
+}
+
+async function loadSharedEdits() {
+  const edits = await request('article_edits');
+  edits.forEach(applySharedEdit);
+  if (edits.length) decorate();
 }
 
 function decorate() {
@@ -99,7 +116,7 @@ function render(data) {
         action.className = 'section-edit';
         const button = element('button', '編集');
         button.type = 'button';
-        button.setAttribute('aria-label', group.title + 'の編集コメント');
+        button.setAttribute('aria-label', group.title + 'を編集');
         button.addEventListener('click', () => openEdit(firstId, button));
         action.append('[', button, ']');
         heading.append(action);
@@ -214,7 +231,9 @@ function refreshPanel() {
   const relevant = target ? notes.filter(n => n.anchor === target.anchor) : notes;
   for (const note of relevant) {
     const item = element('section');
-    const jump = element('button', anchors.has(note.anchor) ? anchors.get(note.anchor).label + 'の該当箇所へ' : '以前の原稿へのコメント');
+    const entry = anchors.get(note.anchor);
+    const matches = entry?.text.slice(note.start, note.end) === note.quote;
+    const jump = element('button', matches ? entry.label + 'の該当箇所へ' : '以前の原稿へのコメント');
     jump.disabled = !anchors.has(note.anchor);
     jump.type = 'button';
     jump.addEventListener('click', () => {
@@ -245,6 +264,7 @@ function show(next, control) {
   panel.hidden = false;
   document.body.classList.add('panel-open');
   quote.hidden = !target;
+  byId('edit-target').hidden = !target || !anchors.has(target.anchor);
   form.hidden = !target;
   quote.textContent = target?.quote ?? '';
   byId('panel-title').textContent = target ? '修正コメント' : 'コメント一覧';
@@ -265,10 +285,11 @@ async function request(action, fields = {}) {
   const response = await fetch(endpoint, {
     method: 'POST',
     credentials: 'omit',
+    signal: AbortSignal.timeout(25000),
     headers: {'Content-Type': 'text/plain;charset=UTF-8'},
     body: JSON.stringify({key, action, ...fields})
   });
-  if (!response.ok) throw new Error('コメントの通信に失敗しました。');
+  if (!response.ok) throw new Error('通信に失敗しました。');
   const result = await response.json();
   if (result.error) throw new Error(result.error);
   return result.data;
@@ -405,6 +426,10 @@ const decode64 = text => Uint8Array.from(atob(text.replaceAll('-','+').replaceAl
     const cipherKey = await crypto.subtle.importKey('raw',decode64(key),'AES-GCM',false,['decrypt']);
     const raw = await crypto.subtle.decrypt({name:'AES-GCM',iv:decode64(file.iv)},cipherKey,decode64(file.data));
     render(JSON.parse(new TextDecoder().decode(raw)));
+    sharedEditsReady = loadSharedEdits().then(() => true, () => false);
+    void sharedEditsReady.then(ok => {
+      if (!ok) byId('article-status').textContent = '保存済みの本文を読み込めませんでした。';
+    });
     byId('access').hidden = true;
     byId('layout').hidden = false;
     byId('all').hidden = false;
@@ -472,14 +497,117 @@ byId('appearance-options').addEventListener('change', event => {
   if (['text', 'width', 'theme'].includes(name)) document.documentElement.dataset[name] = value;
 });
 
-function openEdit(anchor, control) {
-  if (anchors.has(anchor)) {
-    window.getSelection()?.removeAllRanges();
-    show(capture(anchor), control);
-    status.textContent = '該当箇所をクリックするか、文章を選択して修正を提案できます。';
+const editDialog = byId('edit-dialog');
+const editSelect = byId('edit-anchor');
+const editText = byId('edit-text');
+const editStatus = byId('edit-status');
+const editSave = byId('edit-save');
+const editConflict = byId('edit-conflict');
+let editing;
+let attemptedEdit;
+
+function selectEdit(anchor) {
+  const entry = anchors.get(anchor);
+  editing = {anchor, base:entry.revision, text:entry.text};
+  editSelect.value = anchor;
+  editText.value = entry.text;
+  editStatus.textContent = '';
+  editConflict.hidden = true;
+  attemptedEdit = null;
+}
+
+async function openEdit(anchor, control) {
+  if (!anchors.has(anchor) || editDialog.open) return;
+  control.disabled = true;
+  try {
+    const ready = await sharedEditsReady;
+    if (!ready) {
+      await loadSharedEdits();
+      sharedEditsReady = Promise.resolve(true);
+      byId('article-status').textContent = '';
+    }
+    if (editDialog.open) return;
+    const options = Array.from(anchors, ([id, entry]) => {
+      const excerpt = entry.text.replace(/\s+/g,' ').slice(0,44);
+      const option = element('option', entry.label + ' — ' + excerpt);
+      option.value = id;
+      return option;
+    });
+    editSelect.replaceChildren(...options);
+    selectEdit(anchor);
+    editDialog.showModal();
+    editText.focus();
+  } catch {
+    byId(panel.hidden ? 'article-status' : 'status').textContent = '本文を読み込めませんでした。もう一度お試しください。';
+  } finally {
+    control.disabled = false;
   }
 }
 byId('review-edit').addEventListener('click', event => openEdit(anchors.keys().next().value, event.currentTarget));
+byId('edit-target').addEventListener('click', event => openEdit(target?.anchor, event.currentTarget));
+
+editSelect.addEventListener('change', () => {
+  if (editText.value !== editing.text && !window.confirm('この箇所の未保存の変更を破棄しますか？')) {
+    editSelect.value = editing.anchor;
+    return;
+  }
+  selectEdit(editSelect.value);
+});
+for (const id of ['edit-close','edit-cancel']) byId(id).addEventListener('click', () => editDialog.close());
+editDialog.addEventListener('cancel', event => {
+  if (editSave.disabled) event.preventDefault();
+});
+
+byId('edit-rebase').addEventListener('click', () => {
+  const entry = anchors.get(editing.anchor);
+  editing.base = entry.revision;
+  editing.text = entry.text;
+  editConflict.hidden = true;
+  editStatus.textContent = '編集内容は残しています。確認してから保存してください。';
+  editText.focus();
+});
+
+byId('edit-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (editSave.disabled || !editConflict.hidden) return;
+  const value = editText.value;
+  if (value === editing.text) {
+    editDialog.close();
+    return;
+  }
+  if (!value.trim()) {
+    editStatus.textContent = '本文を入力してください。';
+    return;
+  }
+  if (attemptedEdit?.text !== value || attemptedEdit.base !== editing.base) {
+    attemptedEdit = {anchor:editing.anchor,base:editing.base,id:crypto.randomUUID(),text:value};
+  }
+  const controls = [editSave,editText,editSelect,byId('edit-close'),byId('edit-cancel')];
+  controls.forEach(control => { control.disabled = true; });
+  editStatus.textContent = '保存しています…';
+  try {
+    const result = await request('article_edit', {edit:attemptedEdit});
+    if ('conflict' in result) {
+      if (result.conflict) applySharedEdit(result.conflict);
+      decorate();
+      byId('edit-current').textContent = anchors.get(editing.anchor).text;
+      editConflict.hidden = false;
+      editStatus.textContent = '別の編集が保存されました。最新版を確認してください。';
+      return;
+    }
+    applySharedEdit(result.saved);
+    decorate();
+    if (!panel.hidden) refreshPanel();
+    editDialog.close();
+    byId(panel.hidden ? 'article-status' : 'status').textContent = '本文を保存しました。';
+  } catch (error) {
+    editStatus.textContent = error.message === 'too_long'
+      ? '文章が長すぎます。短くしてから保存してください。'
+      : '本文を保存できませんでした。入力内容を残しています。';
+  } finally {
+    controls.forEach(control => { control.disabled = false; });
+  }
+});
 
 byId('article-search').addEventListener('submit', event => {
   event.preventDefault();

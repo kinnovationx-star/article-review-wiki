@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
-<title>山本大平 — 人物記事の確認</title><link rel="stylesheet" href="style.css?v=9"><script src="review.js?v=10" defer></script>
+<title>山本大平 — 人物記事の確認</title><link rel="stylesheet" href="style.css?v=10"><script src="review.js?v=11" defer></script>
 </head>
 <body>
 <header class="wiki-header">
@@ -30,7 +30,7 @@
 <div><a href="#intro" aria-current="page">閲覧</a><button id="review-edit" type="button">編集</button><button id="review-history" type="button">コメント履歴</button><button id="review-bookmark" class="tab-icon" type="button" aria-label="共有リンクをコピー" title="共有リンクをコピー"><span class="bookmark-icon" aria-hidden="true"></span></button><button id="tools-toggle" class="tab-icon" type="button" aria-label="ツール" aria-expanded="false" aria-controls="page-tools">⋮</button></div>
 <div id="page-tools" class="popup" hidden><button id="print-page" type="button">印刷用バージョン</button><button id="compact-appearance" class="compact-control" type="button" aria-expanded="false" aria-controls="appearance">表示設定</button></div>
 </div>
-<p class="guide">人物記事の確認用草稿<span id="sync" role="status"></span></p>
+<p class="guide">人物記事の確認用草稿<span id="sync" role="status"></span><span id="article-status" role="status"></span></p>
 <article aria-label="山本大平の記事案"></article>
 </main>
 <aside class="appearance" id="appearance" aria-label="表示設定">
@@ -45,7 +45,19 @@
 <aside id="panel" hidden aria-labelledby="panel-title">
 <div class="panel-head"><h2 id="panel-title">コメント</h2><button id="close" type="button" aria-label="閉じる">×</button></div>
 <blockquote id="quote" hidden></blockquote>
+<button id="edit-target" type="button" hidden>この箇所の本文を編集</button>
 <form id="form" hidden><label for="message">修正内容</label><textarea id="message" rows="5" maxlength="4000" required placeholder="正しい表記や、追記したい内容をご記入ください。"></textarea><button class="primary" type="submit">コメントを保存</button></form>
 <p id="status" role="status"></p><div id="comments"></div>
 </aside>
+<dialog id="edit-dialog" aria-labelledby="edit-title">
+<form id="edit-form">
+<header><h2 id="edit-title">本文を編集</h2><button id="edit-close" type="button" aria-label="閉じる">×</button></header>
+<p>保存すると、この共有リンクで記事を開く人にも反映されます。</p>
+<label for="edit-anchor">編集する箇所</label><select id="edit-anchor"></select>
+<label for="edit-text">本文</label><textarea id="edit-text" rows="9" maxlength="2000" required></textarea>
+<p id="edit-status" role="status"></p>
+<div id="edit-conflict" hidden><p>現在公開されている文章</p><blockquote id="edit-current"></blockquote><button id="edit-rebase" type="button">最新版を確認して編集を続ける</button></div>
+<div class="edit-actions"><button id="edit-cancel" type="button">キャンセル</button><button id="edit-save" class="primary" type="submit">本文を保存</button></div>
+</form>
+</dialog>
 </body></html>
